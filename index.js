@@ -38,7 +38,7 @@ const main = async() => {
     });
 
     app.get('/get_transaction_traces/:txid', async (req, res) => {
-        const key = 'thalos_transaction_'+req.params.tx_id;
+        const key = 'thalos_transaction_'+req.params.txid;
         try {
             const transaction_stringify = await redis_client.get(key)
 
