@@ -18,8 +18,9 @@ const main = async() => {
 
     thalos_client.onTransaction(async (transaction) => {
         const key = 'thalos_transaction_'+transaction.id;
+        const transaction_stringify = JSON.stringify(transaction)
         try {
-            await redis_client.set(key, transaction, {
+            await redis_client.set(key, transaction_stringify, {
                 'EX': 1200 // 20 minutes expiry
             });
         }
@@ -39,13 +40,14 @@ const main = async() => {
     app.get('/get_transaction_traces/:txid', async (req, res) => {
         const key = 'thalos_transaction_'+req.params.tx_id;
         try {
-            const transaction = await redis_client.get(key)
+            const transaction_stringify = await redis_client.get(key)
 
-            if(!transaction) {
+            if(!transaction_stringify) {
                 res.json({code: 404, message: 'Transaction not found'})
                 return;
             }
 
+            const transaction = JSON.parse(transaction_stringify)
             res.json(transaction)
         }
         catch(e) {
