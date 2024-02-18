@@ -14,11 +14,14 @@ const main = async() => {
     const redis_client = await createClient({
         url: "redis://127.0.0.1:6379"
     });
+    await redis_client.connect()
 
     thalos_client.onTransaction(async (transaction) => {
         const key = 'thalos_transaction_'+transaction.id;
         try {
-            await redis_client.set(key, transaction, 'EX', 1200); // 20 minutes expiry
+            await redis_client.set(key, transaction, {
+                'EX': 1200 // 20 minutes expiry
+            });
         }
         catch(e) {
             console.log('Error adding key value to redis');
