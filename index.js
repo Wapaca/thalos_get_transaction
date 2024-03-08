@@ -1,18 +1,27 @@
 import express from 'express'
 import * as thalos from '@eosswedenorg/thalos-client';
 import { createClient } from 'redis';
-
+import yargs from 'yargs';
+import { hideBin } from 'yargs/helpers'
 
 const main = async() => {
+    const argv = yargs(hideBin(process.argv)).argv
+    let { port, redisUrl, expiry, ns } = argv;
+
+    port = port || 8000
+    redisUrl = redisUrl || "redis://127.0.0.1:6379"
+    expiry = expiry || 1200 // 20 minutes expiry
+    ns = ns || "1064487b3cd1a897ce03ae5b6a865651747e2e152090f99c1d19d44e01aea5a4" // wax mainnet
+
     // Create client.
     const thalos_client = thalos.createRedisClient({
-        url: "redis://127.0.0.1:6379",
+        url: redisUrl,
         prefix: "ship",
-        ns: "1064487b3cd1a897ce03ae5b6a865651747e2e152090f99c1d19d44e01aea5a4" // wax mainnet
+        ns
     })
 
     const redis_client = await createClient({
-        url: "redis://127.0.0.1:6379"
+        url: redisUrl
     });
     await redis_client.connect()
 
@@ -21,7 +30,7 @@ const main = async() => {
         const transaction_stringify = JSON.stringify(transaction)
         try {
             await redis_client.set(key, transaction_stringify, {
-                'EX': 1200 // 20 minutes expiry
+                'EX': expiry
             });
         }
         catch(e) {
@@ -55,7 +64,7 @@ const main = async() => {
         }
     });
 
-    app.listen(8000, () => {
+    app.listen(port, () => {
         console.log('Thalos get_transaction_traces wrapper listening on port 8000!')
     });
 }
